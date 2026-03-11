@@ -3,13 +3,17 @@ export default function InputSectionKredit({
   setFormData,
   onHitung,
 }) {
+  // Fungsi format ribuan dengan proteksi string kosong
   const formatRibuan = (num) => {
-    if (!num) return "";
+    if (num === "" || num === 0 || num === undefined || num === null) return "";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
+  // Fungsi parse angka agar state bisa menyimpan string kosong saat dihapus
   const parseAngka = (str) => {
-    return Number(str.replace(/\D/g, ""));
+    if (str === "") return "";
+    const cleanValue = str.replace(/\D/g, "");
+    return cleanValue === "" ? "" : Number(cleanValue);
   };
 
   const inputs = [
@@ -37,21 +41,33 @@ export default function InputSectionKredit({
                 </span>
               )}
               <input
-                type={item.isCurrency ? "text" : "number"}
+                // Menggunakan type="text" agar handling string kosong lebih stabil di semua browser
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
                 className={`w-full p-4 bg-gray-50 rounded-2xl border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-600 outline-none transition-all ${
                   item.isCurrency ? "pl-11" : ""
                 }`}
                 value={
                   item.isCurrency
                     ? formatRibuan(formData[item.key])
-                    : formData[item.key]
+                    : (formData[item.key] ?? "")
                 }
                 onChange={(e) => {
                   const val = e.target.value;
+
+                  // Jika input dihapus bersih
+                  if (val === "") {
+                    setFormData({ ...formData, [item.key]: "" });
+                    return;
+                  }
+
                   if (item.isCurrency) {
                     setFormData({ ...formData, [item.key]: parseAngka(val) });
                   } else {
-                    setFormData({ ...formData, [item.key]: Number(val) });
+                    // Proteksi untuk input non-currency (Bunga/Tenor) agar hanya angka/titik
+                    const cleanNumeric = val.replace(/[^0-9.]/g, "");
+                    setFormData({ ...formData, [item.key]: cleanNumeric });
                   }
                 }}
               />

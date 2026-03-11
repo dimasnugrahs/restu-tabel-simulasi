@@ -3,12 +3,7 @@ export default function ResultTableKredit({ hasil, formatIDR, onExport }) {
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
         <div>
-          <h4 className="font-bold text-gray-800">
-            Jadwal Angsuran Efektif (Anuitas)
-          </h4>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-            Bunga dihitung dari sisa pokok pinjaman
-          </p>
+          <h4 className="font-bold text-gray-800">Jadwal Angsuran Kredit</h4>
         </div>
         <button
           onClick={onExport}
@@ -53,6 +48,12 @@ export default function ResultTableKredit({ hasil, formatIDR, onExport }) {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="p-4 bg-blue-50/50 border-t border-blue-50">
+        <p className="text-[10px] text-blue-700 italic">
+          *Catatan: Simulasi ini merupakan ilustrasi. Perhitungan sebenarnya
+          mengikuti sistem Bank Restu Dewata.
+        </p>
       </div>
     </div>
   );

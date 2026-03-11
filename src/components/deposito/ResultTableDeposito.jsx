@@ -4,11 +4,8 @@ export default function ResultTableDeposito({ hasil, formatIDR, onExport }) {
       <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
         <div>
           <h4 className="font-bold text-gray-800 text-sm md:text-base">
-            Rincian Distribusi Bunga Bulanan
+            Rincian Perhitungan Bunga Bulanan Deposito
           </h4>
-          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">
-            Bunga ditransfer otomatis ke Rekening Tabungan
-          </p>
         </div>
         <button
           onClick={onExport}
@@ -62,7 +59,8 @@ export default function ResultTableDeposito({ hasil, formatIDR, onExport }) {
       </div>
       <div className="p-4 bg-blue-50/50 border-t border-blue-50">
         <p className="text-[10px] text-blue-700 italic">
-          *Saldo Akhir mencerminkan total Nilai Penempatan + Akumulasi Bunga.
+          *Catatan: Simulasi ini merupakan ilustrasi. Perhitungan sebenarnya
+          mengikuti sistem Bank Restu Dewata.
         </p>
       </div>
     </div>

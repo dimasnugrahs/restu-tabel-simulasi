@@ -53,6 +53,12 @@ export default function ResultTable({ hasil, formatIDR, onExport }) {
           </tbody>
         </table>
       </div>
+      <div className="p-4 bg-blue-50/50 border-t border-blue-50">
+        <p className="text-[10px] text-blue-700 italic">
+          *Catatan: Simulasi ini merupakan ilustrasi. Perhitungan sebenarnya
+          mengikuti sistem Bank Restu Dewata.
+        </p>
+      </div>
     </div>
   );
 }

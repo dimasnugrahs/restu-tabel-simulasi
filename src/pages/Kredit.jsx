@@ -8,8 +8,8 @@ import ResultTableKredit from "../components/kredit/ResultTableKredit";
 
 export default function Kredit() {
   const [formData, setFormData] = useState({
-    plafon: 50000000,
-    bungaTahunan: 10,
+    plafon: 5000000,
+    bungaTahunan: 18,
     tenorBulan: 12,
   });
 

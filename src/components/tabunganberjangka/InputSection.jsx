@@ -1,11 +1,15 @@
 export default function InputSection({ formData, setFormData, onHitung }) {
   const formatRibuan = (num) => {
-    if (!num && num !== 0) return "";
+    // Pastikan jika num kosong atau 0 (saat dihapus), return string kosong
+    if (num === "" || num === 0 || num === undefined) return "";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const parseAngka = (str) => {
-    return Number(str.replace(/\D/g, ""));
+    // Jika string kosong, kembalikan string kosong, bukan Number
+    if (str === "") return "";
+    const cleanValue = str.replace(/\D/g, "");
+    return cleanValue === "" ? "" : Number(cleanValue);
   };
 
   const inputs = [
@@ -33,21 +37,30 @@ export default function InputSection({ formData, setFormData, onHitung }) {
                 </span>
               )}
               <input
-                type={item.isCurrency ? "text" : "number"}
+                type={item.isCurrency ? "text" : "text"}
+                inputMode="numeric"
+                placeholder="0"
                 className={`w-full p-4 bg-gray-50 rounded-2xl border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-600 transition-all outline-none ${
                   item.isCurrency ? "pl-11" : ""
                 }`}
                 value={
                   item.isCurrency
                     ? formatRibuan(formData[item.key])
-                    : formData[item.key]
+                    : (formData[item.key] ?? "")
                 }
                 onChange={(e) => {
                   const val = e.target.value;
+
+                  if (val === "") {
+                    setFormData({ ...formData, [item.key]: "" });
+                    return;
+                  }
+
                   if (item.isCurrency) {
                     setFormData({ ...formData, [item.key]: parseAngka(val) });
                   } else {
-                    setFormData({ ...formData, [item.key]: Number(val) });
+                    const numericVal = val.replace(/[^0-9.]/g, "");
+                    setFormData({ ...formData, [item.key]: numericVal });
                   }
                 }}
               />
