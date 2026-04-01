@@ -17,6 +17,7 @@ export default function ResultTable({ hasil, formatIDR, onExport }) {
           <thead>
             <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-50">
               <th className="px-6 py-4 font-bold">Bulan</th>
+              <th className="px-6 py-4 font-bold">Tanggal</th>
               <th className="px-6 py-4 font-bold">Setoran</th>
               <th className="px-6 py-4 font-bold">Bunga (Bruto)</th>
               <th className="px-6 py-4 font-bold text-red-500">Pajak (20%)</th>
@@ -30,6 +31,9 @@ export default function ResultTable({ hasil, formatIDR, onExport }) {
                 className="hover:bg-gray-50 transition-colors"
               >
                 <td className="px-6 py-4">{row.bulan}</td>
+                <td className="px-6 py-4 font-semibold text-gray-700">
+                  {row.tanggal}
+                </td>
                 <td className="px-6 py-4">{formatIDR(row.setoran)}</td>
                 <td className="px-6 py-4 text-emerald-600 font-medium">
                   +{formatIDR(row.bungaBruto)}

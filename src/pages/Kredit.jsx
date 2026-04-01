@@ -6,11 +6,14 @@ import InputSectionKredit from "../components/kredit/InputSectionKredit";
 import SummaryCardKredit from "../components/kredit/SummaryCardKredit";
 import ResultTableKredit from "../components/kredit/ResultTableKredit";
 
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+
 export default function Kredit() {
   const [formData, setFormData] = useState({
     plafon: 5000000,
     bungaTahunan: 18,
     tenorBulan: 12,
+    tanggalPengajuan: getTodayDate(),
   });
 
   const [hasil, setHasil] = useState([]);
@@ -24,23 +27,35 @@ export default function Kredit() {
 
   const hitungSimulasi = () => {
     let dataSimulasi = [];
-    const plafon = formData.plafon;
-    const tenor = formData.tenorBulan;
-    const bungaBulanan = formData.bungaTahunan / 100 / 12;
-
+    const {
+      plafon,
+      tenorBulan: tenor,
+      bungaTahunan,
+      tanggalPengajuan,
+    } = formData;
+    const bungaBulanan = bungaTahunan / 100 / 12;
     const angsuranPokokTetap = plafon / tenor;
-
     let sisaPinjaman = plafon;
+
+    // Base date untuk perhitungan bulan
+    const baseDate = new Date(tanggalPengajuan);
 
     for (let i = 1; i <= tenor; i++) {
       const bungaBulanIni = sisaPinjaman * bungaBulanan;
-
       const totalAngsuran = angsuranPokokTetap + bungaBulanIni;
-
       sisaPinjaman -= angsuranPokokTetap;
+
+      // Hitung Tanggal Penagihan (setiap bulan berikutnya)
+      const tglTagihan = new Date(baseDate);
+      tglTagihan.setMonth(baseDate.getMonth() + i);
 
       dataSimulasi.push({
         bulan: i,
+        tanggal: tglTagihan.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
         cicilan: totalAngsuran,
         pokok: angsuranPokokTetap,
         bunga: bungaBulanIni,
@@ -53,8 +68,17 @@ export default function Kredit() {
   const exportToPDF = () => {
     const doc = new jsPDF();
     const namaApp = "SIMURES";
+    const isCalculated = hasil.length > 0;
 
-    // 1. Header & Judul
+    const tglJatuhTempo = isCalculated ? hasil[hasil.length - 1].tanggal : "-";
+    const tglPengajuanIndo = new Date(
+      formData.tanggalPengajuan,
+    ).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(30, 64, 175);
@@ -76,20 +100,23 @@ export default function Kredit() {
     doc.text("Ringkasan Parameter:", 14, 42);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Jumlah Pinjaman: ${formatIDR(formData.plafon)}`, 14, 48);
-    doc.text(`Lama Pinjaman: ${formData.tenorBulan} Bulan`, 14, 54);
-    doc.text(`Bunga Per Tahun: ${formData.bungaTahunan}%`, 14, 60);
-    doc.text(`Sistem Bunga: Efektif (Sliding)`, 14, 66);
+    doc.text(`Tanggal Pengajuan: ${tglPengajuanIndo}`, 14, 48);
+    doc.text(`Jumlah Pinjaman: ${formatIDR(formData.plafon)}`, 14, 54);
+    doc.text(`Lama Pinjaman: ${formData.tenorBulan} Bulan`, 14, 60);
+    doc.text(`Bunga Per Tahun: ${formData.bungaTahunan}%`, 14, 66);
+    doc.text(`Sistem Bunga: Efektif`, 14, 72);
 
     const totalBunga = hasil.reduce((acc, curr) => acc + curr.bunga, 0);
     const totalPengembalian = formData.plafon + totalBunga;
 
     doc.setFont("helvetica", "bold");
-    doc.text(`Total Beban Bunga: ${formatIDR(totalBunga)}`, 110, 48);
-    doc.text(`Total Pengembalian: ${formatIDR(totalPengembalian)}`, 110, 54);
+    doc.text(`Jatuh Tempo Akhir: ${tglJatuhTempo}`, 110, 48);
+    doc.text(`Total Beban Bunga: ${formatIDR(totalBunga)}`, 110, 54);
+    doc.text(`Total Pengembalian: ${formatIDR(totalPengembalian)}`, 110, 60);
 
     const tableRows = hasil.map((row) => [
       row.bulan,
+      row.tanggal,
       formatIDR(row.bunga),
       formatIDR(row.pokok),
       formatIDR(row.cicilan),
@@ -101,6 +128,7 @@ export default function Kredit() {
       head: [
         [
           "Bulan",
+          "Tanggal Tagihan",
           "Angsuran Bunga",
           "Angsuran Pokok",
           "Total Angsuran",
@@ -112,9 +140,10 @@ export default function Kredit() {
       headStyles: { fillColor: [37, 99, 235], halign: "center" },
       columnStyles: {
         0: { halign: "center" },
-        1: { textColor: [220, 38, 38] },
-        3: { fontStyle: "bold" },
-        4: { halign: "right" },
+        1: { halign: "center", fontStyle: "bold" },
+        2: { textColor: [220, 38, 38] },
+        4: { fontStyle: "bold" },
+        5: { halign: "right" },
       },
     });
 

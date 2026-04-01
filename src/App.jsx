@@ -13,12 +13,14 @@ function App() {
       <div className="min-h-screen flex flex-col bg-slate-50">
         <Navbar />
         <main className="grow container mx-auto px-6 md:px-20 py-10">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tabungan" element={<TabunganBerjangka />} />
-            <Route path="/deposito" element={<Deposito />} />
-            <Route path="/kredit" element={<Kredit />} />
-          </Routes>
+          <ScrollToTop>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/tabungan" element={<TabunganBerjangka />} />
+              <Route path="/deposito" element={<Deposito />} />
+              <Route path="/kredit" element={<Kredit />} />
+            </Routes>
+          </ScrollToTop>
         </main>
         <Footer />
       </div>

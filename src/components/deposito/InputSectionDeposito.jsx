@@ -29,6 +29,19 @@ export default function InputSectionDeposito({
   return (
     <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="font-bold text-sm text-gray-700">
+            Tanggal Penempatan
+          </label>
+          <input
+            type="date"
+            className="w-full p-4 bg-gray-50 rounded-2xl border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-600 outline-none transition-all"
+            value={formData.tanggalMulai || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, tanggalMulai: e.target.value })
+            }
+          />
+        </div>
         {inputs.map((item) => (
           <div key={item.key} className="space-y-2">
             <label className="font-bold text-sm text-gray-700">

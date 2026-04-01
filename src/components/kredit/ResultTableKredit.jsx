@@ -17,6 +17,7 @@ export default function ResultTableKredit({ hasil, formatIDR, onExport }) {
           <thead>
             <tr className="text-gray-400 border-b border-gray-50">
               <th className="px-6 py-4 font-bold">Bln</th>
+              <th className="px-6 py-4 font-bold">Tanggal Tagihan</th>
               <th className="px-6 py-4 font-bold">Angsuran Pokok</th>
               <th className="px-6 py-4 font-bold text-red-500">
                 Angsuran Bunga
@@ -33,6 +34,9 @@ export default function ResultTableKredit({ hasil, formatIDR, onExport }) {
               >
                 <td className="px-6 py-4 font-medium text-gray-400">
                   {row.bulan}
+                </td>
+                <td className="px-6 py-4 font-semibold text-gray-700">
+                  {row.tanggal}
                 </td>
                 <td className="px-6 py-4">{formatIDR(row.pokok)}</td>
                 <td className="px-6 py-4 text-red-400 italic">

@@ -29,6 +29,22 @@ export default function InputSectionKredit({
   return (
     <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Input Tanggal Pengajuan */}
+        <div className="space-y-2">
+          <label className="font-bold text-sm text-gray-700">
+            Tanggal Pengajuan
+          </label>
+          <input
+            type="date"
+            className="w-full p-4 bg-gray-50 rounded-2xl border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-600 outline-none transition-all"
+            value={formData.tanggalPengajuan || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, tanggalPengajuan: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Input Lainnya (Mapping) */}
         {inputs.map((item) => (
           <div key={item.key} className="space-y-2">
             <label className="font-bold text-sm text-gray-700">
@@ -41,7 +57,6 @@ export default function InputSectionKredit({
                 </span>
               )}
               <input
-                // Menggunakan type="text" agar handling string kosong lebih stabil di semua browser
                 type="text"
                 inputMode="numeric"
                 placeholder="0"
@@ -56,7 +71,6 @@ export default function InputSectionKredit({
                 onChange={(e) => {
                   const val = e.target.value;
 
-                  // Jika input dihapus bersih
                   if (val === "") {
                     setFormData({ ...formData, [item.key]: "" });
                     return;
@@ -65,7 +79,6 @@ export default function InputSectionKredit({
                   if (item.isCurrency) {
                     setFormData({ ...formData, [item.key]: parseAngka(val) });
                   } else {
-                    // Proteksi untuk input non-currency (Bunga/Tenor) agar hanya angka/titik
                     const cleanNumeric = val.replace(/[^0-9.]/g, "");
                     setFormData({ ...formData, [item.key]: cleanNumeric });
                   }

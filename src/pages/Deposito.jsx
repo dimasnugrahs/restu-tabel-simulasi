@@ -6,11 +6,14 @@ import InputSectionDeposito from "../components/deposito/InputSectionDeposito";
 import SummaryCardDeposito from "../components/deposito/SummaryCardDeposito";
 import ResultTableDeposito from "../components/deposito/ResultTableDeposito";
 
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+
 export default function Deposito() {
   const [formData, setFormData] = useState({
     nominalDeposito: 1000000,
     bungaTahunan: 5,
     tenorBulan: 12,
+    tanggalMulai: getTodayDate(),
   });
 
   const [hasil, setHasil] = useState([]);
@@ -26,6 +29,8 @@ export default function Deposito() {
     let dataSimulasi = [];
     const pokok = formData.nominalDeposito;
     const bungaPerTahun = formData.bungaTahunan / 100;
+    const { tanggalMulai } = formData;
+    const baseDate = new Date(tanggalMulai);
 
     const bungaBrutoBulanan = (pokok * bungaPerTahun) / 12;
 
@@ -37,8 +42,16 @@ export default function Deposito() {
     for (let i = 1; i <= formData.tenorBulan; i++) {
       totalAkumulasiBunga += bungaNetBulanan;
 
+      const tglBunga = new Date(baseDate);
+      tglBunga.setMonth(baseDate.getMonth() + i);
+
       dataSimulasi.push({
         bulan: i,
+        tanggal: tglBunga.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
         bungaBruto: bungaBrutoBulanan,
         pajak: nominalPajakBulanan,
         bungaNet: bungaNetBulanan,
@@ -51,6 +64,8 @@ export default function Deposito() {
   const exportToPDF = () => {
     const doc = new jsPDF();
     const namaApp = "SIMURES";
+    const isCalculated = hasil.length > 0;
+    const tglCair = isCalculated ? hasil[hasil.length - 1].tanggal : "-";
 
     // 1. Header & Judul
     doc.setFont("helvetica", "bold");
@@ -68,7 +83,6 @@ export default function Deposito() {
     doc.text("Laporan Simulasi Deposito Berjangka", 14, 28);
     doc.line(14, 32, 196, 32);
 
-    // 2. Parameter Simulasi (Disesuaikan untuk Deposito)
     doc.setFontSize(10);
     doc.setTextColor(0);
     doc.setFont("helvetica", "bold");
@@ -81,12 +95,12 @@ export default function Deposito() {
       48,
     );
     doc.text(`Tenor: ${formData.tenorBulan} Bulan`, 14, 54);
+    doc.text(`Tanggal Jatuh Tempo: ${tglCair}`, 14, 60);
     doc.text(
       `Bunga Tahunan: ${formData.bungaTahunan}% (Pajak 20% jika saldo >= 7.5jt)`,
       14,
-      60,
+      66,
     );
-    doc.text(`Sistem Bunga: Ditransfer ke Tabungan per Bulan`, 14, 66);
 
     // 3. Ringkasan Hasil
     const totalBungaNet = hasil.reduce((acc, curr) => acc + curr.bungaNet, 0);
@@ -103,6 +117,7 @@ export default function Deposito() {
     // 4. Tabel Rincian (Disesuaikan Kolomnya)
     const tableRows = hasil.map((row) => [
       row.bulan,
+      row.tanggal,
       formatIDR(row.bungaBruto),
       row.pajak > 0 ? formatIDR(row.pajak) : "Bebas Pajak",
       formatIDR(row.bungaNet),
@@ -114,6 +129,7 @@ export default function Deposito() {
       head: [
         [
           "Bulan",
+          "Tanggal Bayar Bunga",
           "Bunga (Bruto)",
           "Pajak (20%)",
           "Bunga Net",

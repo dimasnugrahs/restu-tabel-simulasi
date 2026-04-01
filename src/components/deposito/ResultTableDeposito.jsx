@@ -19,6 +19,9 @@ export default function ResultTableDeposito({ hasil, formatIDR, onExport }) {
           <thead>
             <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-50">
               <th className="px-6 py-4 font-bold">Bulan</th>
+              <th className="px-6 py-4 font-bold text-brand-600">
+                Tanggal Bayar Bunga
+              </th>
               <th className="px-6 py-4 font-bold">Bunga (Bruto)</th>
               <th className="px-6 py-4 font-bold text-red-500">Pajak (20%)</th>
               <th className="px-6 py-4 font-bold">Bunga Net</th>
@@ -32,6 +35,9 @@ export default function ResultTableDeposito({ hasil, formatIDR, onExport }) {
                 className="hover:bg-gray-50 transition-colors"
               >
                 <td className="px-6 py-4 font-medium">{row.bulan}</td>
+                <td className="px-6 py-4 font-bold text-gray-800">
+                  {row.tanggal}
+                </td>
                 <td className="px-6 py-4 text-gray-500">
                   {formatIDR(row.bungaBruto)}
                 </td>

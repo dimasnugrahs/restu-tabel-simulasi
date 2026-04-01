@@ -6,11 +6,14 @@ import InputSection from "../components/tabunganberjangka/InputSection";
 import SummaryCard from "../components/tabunganberjangka/SummaryCard";
 import ResultTable from "../components/tabunganberjangka/ResultTable";
 
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+
 export default function TabunganBerjangka() {
   const [formData, setFormData] = useState({
     setoranBulanan: 100000,
     bungaTahunan: 4,
     tenorBulan: 12,
+    tanggalMulai: getTodayDate(),
   });
 
   const [hasil, setHasil] = useState([]);
@@ -25,7 +28,9 @@ export default function TabunganBerjangka() {
   const hitungSimulasi = () => {
     let dataSimulasi = [];
     let saldo = 0;
+    const { tanggalMulai } = formData;
     const bungaPerBulan = formData.bungaTahunan / 100 / 12;
+    const baseDate = new Date(tanggalMulai);
 
     for (let i = 1; i <= formData.tenorBulan; i++) {
       saldo += formData.setoranBulanan;
@@ -37,8 +42,16 @@ export default function TabunganBerjangka() {
 
       saldo += bungaNetto;
 
+      const tglSetoran = new Date(baseDate);
+      tglSetoran.setMonth(baseDate.getMonth() + i);
+
       dataSimulasi.push({
         bulan: i,
+        tanggal: tglSetoran.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
         setoran: formData.setoranBulanan,
         bungaBruto: bungaBruto,
         pajak: nominalPajak,
@@ -51,7 +64,18 @@ export default function TabunganBerjangka() {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const namaApp = "SIMURES - RESTU DEWATA";
+    const namaApp = "SIMURES";
+    const isCalculated = hasil.length > 0;
+
+    const tglJatuhTempo = isCalculated ? hasil[hasil.length - 1].tanggal : "-";
+    const tglMulaiIndo = new Date(formData.tanggalMulai).toLocaleDateString(
+      "id-ID",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      },
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
@@ -74,28 +98,31 @@ export default function TabunganBerjangka() {
     doc.text("Ringkasan Parameter:", 14, 42);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Setoran Awal: ${formatIDR(0)}`, 14, 48);
+    doc.text(`Tanggal Mulai: ${tglMulaiIndo}`, 14, 48);
+    doc.text(`Setoran Awal: ${formatIDR(0)}`, 14, 54);
     doc.text(
       `Setoran Rutin: ${formatIDR(formData.setoranBulanan)} / bulan`,
       14,
-      54,
+      60,
     );
     doc.text(
       `Bunga Tahunan: ${formData.bungaTahunan}% (Pajak 20% jika saldo > 7.5jt)`,
       14,
-      60,
+      66,
     );
-    doc.text(`Tenor: ${formData.tenorBulan} Bulan`, 14, 66);
+    doc.text(`Tenor: ${formData.tenorBulan} Bulan`, 14, 72);
 
     const totalBungaNet = hasil.reduce((acc, curr) => acc + curr.bungaNet, 0);
     const saldoAkhir = hasil[hasil.length - 1].saldoAkhir;
 
     doc.setFont("helvetica", "bold");
-    doc.text(`Total Bunga (Net): ${formatIDR(totalBungaNet)}`, 120, 48);
-    doc.text(`Estimasi Saldo Akhir: ${formatIDR(saldoAkhir)}`, 120, 54);
+    doc.text(`Jatuh Tempo Cair: ${tglJatuhTempo}`, 120, 48);
+    doc.text(`Total Bunga (Net): ${formatIDR(totalBungaNet)}`, 120, 54);
+    doc.text(`Estimasi Saldo Akhir: ${formatIDR(saldoAkhir)}`, 120, 60);
 
     const tableRows = hasil.map((row) => [
       row.bulan,
+      row.tanggal,
       formatIDR(row.setoran),
       formatIDR(row.bungaBruto),
       row.pajak > 0 ? formatIDR(row.pajak) : "Bebas Pajak",
@@ -105,13 +132,21 @@ export default function TabunganBerjangka() {
     autoTable(doc, {
       startY: 75,
       head: [
-        ["Bulan", "Setoran", "Bunga (Bruto)", "Pajak (20%)", "Saldo Akhir"],
+        [
+          "Bulan",
+          "Tanggal Setoran",
+          "Setoran",
+          "Bunga (Bruto)",
+          "Pajak (20%)",
+          "Saldo Akhir",
+        ],
       ],
       body: tableRows,
       theme: "grid",
       headStyles: { fillColor: [37, 99, 235], halign: "center" },
       columnStyles: {
         0: { halign: "center" },
+        1: { halign: "center", fontStyle: "bold" },
         3: { textColor: [220, 38, 38] },
         4: { fontStyle: "bold" },
       },

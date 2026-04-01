@@ -1,5 +1,6 @@
 export default function SummaryCard({ formData, hasil, formatIDR }) {
   const isCalculated = hasil.length > 0;
+  const tglJatuhTempo = isCalculated ? hasil[hasil.length - 1].tanggal : "-";
 
   const totalSetoran = isCalculated
     ? formData.setoranBulanan * formData.tenorBulan
@@ -31,6 +32,13 @@ export default function SummaryCard({ formData, hasil, formatIDR }) {
           <span className="font-bold text-emerald-400">
             {totalBunga > 0 ? `+${formatIDR(totalBunga)}` : formatIDR(0)}
           </span>
+        </div>
+      </div>
+
+      <div className="pt-6 border-t border-brand-800 space-y-4 text-sm">
+        <div className="flex justify-between">
+          <span className="text-brand-300">Jatuh Tempo Cair</span>
+          <span className="font-bold text-brand-100">{tglJatuhTempo}</span>
         </div>
       </div>
 
