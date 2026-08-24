@@ -1,15 +1,15 @@
+import React from "react";
+
 export default function InputSectionKredit({
   formData,
   setFormData,
   onHitung,
 }) {
-  // Fungsi format ribuan dengan proteksi string kosong
   const formatRibuan = (num) => {
     if (num === "" || num === 0 || num === undefined || num === null) return "";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  // Fungsi parse angka agar state bisa menyimpan string kosong saat dihapus
   const parseAngka = (str) => {
     if (str === "") return "";
     const cleanValue = str.replace(/\D/g, "");
@@ -29,6 +29,25 @@ export default function InputSectionKredit({
   return (
     <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Input Jenis Kredit */}
+        <div className="space-y-2 md:col-span-2">
+          <label className="font-bold text-sm text-gray-700">
+            Jenis Kredit / Perhitungan Bunga
+          </label>
+          <select
+            className="w-full p-4 bg-gray-50 rounded-2xl border-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-600 outline-none transition-all font-medium text-gray-700"
+            value={formData.jenisKredit || "menurun"}
+            onChange={(e) =>
+              setFormData({ ...formData, jenisKredit: e.target.value })
+            }
+          >
+            <option value="menurun">Kredit Menurun (Bunga Efektif)</option>
+            <option value="anuitas">Kredit Anuitas (Angsuran Tetap)</option>
+            <option value="tetap">Kredit Tetap (Flat Rate)</option>
+            <option value="ljt">Kredit LJT (Lunas Jatuh Tempo)</option>
+          </select>
+        </div>
+
         {/* Input Tanggal Pengajuan */}
         <div className="space-y-2">
           <label className="font-bold text-sm text-gray-700">
@@ -44,7 +63,7 @@ export default function InputSectionKredit({
           />
         </div>
 
-        {/* Input Lainnya (Mapping) */}
+        {/* Input Lainnya */}
         {inputs.map((item) => (
           <div key={item.key} className="space-y-2">
             <label className="font-bold text-sm text-gray-700">
@@ -88,6 +107,7 @@ export default function InputSectionKredit({
           </div>
         ))}
       </div>
+
       <button
         onClick={onHitung}
         className="w-full py-4 bg-brand-600 text-white font-bold rounded-2xl hover:bg-brand-900 transition-all shadow-lg active:scale-95"

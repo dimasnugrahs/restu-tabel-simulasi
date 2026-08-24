@@ -10,6 +10,7 @@ const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 export default function Kredit() {
   const [formData, setFormData] = useState({
+    jenisKredit: "menurun", // "menurun" | "anuitas" | "tetap" | "ljt"
     plafon: 5000000,
     bungaTahunan: 18,
     tenorBulan: 12,
@@ -28,40 +29,155 @@ export default function Kredit() {
   const hitungSimulasi = () => {
     let dataSimulasi = [];
     const {
-      plafon,
-      tenorBulan: tenor,
-      bungaTahunan,
+      jenisKredit,
+      plafon: rawPlafon,
+      tenorBulan: rawTenor,
+      bungaTahunan: rawBunga,
       tanggalPengajuan,
     } = formData;
-    const bungaBulanan = bungaTahunan / 100 / 12;
-    const angsuranPokokTetap = plafon / tenor;
-    let sisaPinjaman = plafon;
 
-    // Base date untuk perhitungan bulan
+    const plafon = Number(rawPlafon) || 0;
+    const tenor = Number(rawTenor) || 0;
+    const bungaTahunan = Number(rawBunga) || 0;
+
+    if (!plafon || !tenor || tenor <= 0) return;
+
+    const bungaBulanan = bungaTahunan / 100 / 12;
+    let sisaPinjaman = plafon;
     const baseDate = new Date(tanggalPengajuan);
 
-    for (let i = 1; i <= tenor; i++) {
-      const bungaBulanIni = sisaPinjaman * bungaBulanan;
-      const totalAngsuran = angsuranPokokTetap + bungaBulanIni;
-      sisaPinjaman -= angsuranPokokTetap;
+    // ==========================================
+    // 1. KREDIT MENURUN (Efektif Pokok Tetap)
+    // ==========================================
+    if (jenisKredit === "menurun") {
+      const angsuranPokokTetap = plafon / tenor;
 
-      // Hitung Tanggal Penagihan (setiap bulan berikutnya)
-      const tglTagihan = new Date(baseDate);
-      tglTagihan.setMonth(baseDate.getMonth() + i);
+      for (let i = 1; i <= tenor; i++) {
+        const bungaBulanIni = sisaPinjaman * bungaBulanan;
+        const totalAngsuran = angsuranPokokTetap + bungaBulanIni;
+        sisaPinjaman -= angsuranPokokTetap;
 
-      dataSimulasi.push({
-        bulan: i,
-        tanggal: tglTagihan.toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
-        cicilan: totalAngsuran,
-        pokok: angsuranPokokTetap,
-        bunga: bungaBulanIni,
-        sisaPinjaman: Math.abs(sisaPinjaman) < 0.01 ? 0 : sisaPinjaman,
-      });
+        const tglTagihan = new Date(baseDate);
+        tglTagihan.setMonth(baseDate.getMonth() + i);
+
+        dataSimulasi.push({
+          bulan: i,
+          tanggal: tglTagihan.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          cicilan: totalAngsuran,
+          pokok: angsuranPokokTetap,
+          bunga: bungaBulanIni,
+          sisaPinjaman: Math.abs(sisaPinjaman) < 0.01 ? 0 : sisaPinjaman,
+        });
+      }
     }
+
+    // ==========================================
+    // 2. KREDIT ANUITAS (Angsuran Flat/Tetap)
+    // ==========================================
+    else if (jenisKredit === "anuitas") {
+      let angsuranAnuitas = 0;
+      if (bungaBulanan > 0) {
+        angsuranAnuitas =
+          (plafon * (bungaBulanan * Math.pow(1 + bungaBulanan, tenor))) /
+          (Math.pow(1 + bungaBulanan, tenor) - 1);
+      } else {
+        angsuranAnuitas = plafon / tenor;
+      }
+
+      for (let i = 1; i <= tenor; i++) {
+        const bungaBulanIni = sisaPinjaman * bungaBulanan;
+        let pokokBulanIni = angsuranAnuitas - bungaBulanIni;
+
+        // Penyesuaian bulan terakhir agar sisaPinjaman persis 0
+        if (i === tenor) {
+          pokokBulanIni = sisaPinjaman;
+          angsuranAnuitas = pokokBulanIni + bungaBulanIni;
+        }
+
+        sisaPinjaman -= pokokBulanIni;
+
+        const tglTagihan = new Date(baseDate);
+        tglTagihan.setMonth(baseDate.getMonth() + i);
+
+        dataSimulasi.push({
+          bulan: i,
+          tanggal: tglTagihan.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          cicilan: angsuranAnuitas,
+          pokok: pokokBulanIni,
+          bunga: bungaBulanIni,
+          sisaPinjaman: Math.abs(sisaPinjaman) < 0.01 ? 0 : sisaPinjaman,
+        });
+      }
+    }
+
+    // ==========================================
+    // 3. KREDIT TETAP (Flat Rate)
+    // ==========================================
+    else if (jenisKredit === "tetap") {
+      const pokokTetap = plafon / tenor;
+      const bungaTetap = plafon * bungaBulanan;
+      const cicilanTetap = pokokTetap + bungaTetap;
+
+      for (let i = 1; i <= tenor; i++) {
+        sisaPinjaman -= pokokTetap;
+
+        const tglTagihan = new Date(baseDate);
+        tglTagihan.setMonth(baseDate.getMonth() + i);
+
+        dataSimulasi.push({
+          bulan: i,
+          tanggal: tglTagihan.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          cicilan: cicilanTetap,
+          pokok: pokokTetap,
+          bunga: bungaTetap,
+          sisaPinjaman: Math.abs(sisaPinjaman) < 0.01 ? 0 : sisaPinjaman,
+        });
+      }
+    }
+
+    // ==========================================
+    // 4. KREDIT LJT (Lunas Jatuh Tempo)
+    // ==========================================
+    else if (jenisKredit === "ljt") {
+      const bungaBulanIni = plafon * bungaBulanan;
+
+      for (let i = 1; i <= tenor; i++) {
+        const isLastMonth = i === tenor;
+        const pokokBulanIni = isLastMonth ? plafon : 0;
+        const totalAngsuran = pokokBulanIni + bungaBulanIni;
+
+        sisaPinjaman = isLastMonth ? 0 : plafon;
+
+        const tglTagihan = new Date(baseDate);
+        tglTagihan.setMonth(baseDate.getMonth() + i);
+
+        dataSimulasi.push({
+          bulan: i,
+          tanggal: tglTagihan.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          cicilan: totalAngsuran,
+          pokok: pokokBulanIni,
+          bunga: bungaBulanIni,
+          sisaPinjaman: sisaPinjaman,
+        });
+      }
+    }
+
     setHasil(dataSimulasi);
   };
 
@@ -79,6 +195,13 @@ export default function Kredit() {
       year: "numeric",
     });
 
+    const labelMap = {
+      menurun: "Kredit Menurun (Bunga Efektif)",
+      anuitas: "Kredit Anuitas",
+      tetap: "Kredit Tetap (Flat Rate)",
+      ljt: "Kredit LJT (Lunas Jatuh Tempo)",
+    };
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(30, 64, 175);
@@ -91,7 +214,7 @@ export default function Kredit() {
 
     doc.setFontSize(12);
     doc.setTextColor(100);
-    doc.text("Laporan Simulasi Kredit (Bunga Efektif)", 14, 28);
+    doc.text(`Laporan Simulasi ${labelMap[formData.jenisKredit]}`, 14, 28);
     doc.line(14, 32, 196, 32);
 
     doc.setFontSize(10);
@@ -101,13 +224,13 @@ export default function Kredit() {
 
     doc.setFont("helvetica", "normal");
     doc.text(`Tanggal Pengajuan: ${tglPengajuanIndo}`, 14, 48);
-    doc.text(`Jumlah Pinjaman: ${formatIDR(formData.plafon)}`, 14, 54);
+    doc.text(`Jumlah Pinjaman: ${formatIDR(Number(formData.plafon))}`, 14, 54);
     doc.text(`Lama Pinjaman: ${formData.tenorBulan} Bulan`, 14, 60);
     doc.text(`Bunga Per Tahun: ${formData.bungaTahunan}%`, 14, 66);
-    doc.text(`Sistem Bunga: Efektif`, 14, 72);
+    doc.text(`Sistem Bunga: ${labelMap[formData.jenisKredit]}`, 14, 72);
 
     const totalBunga = hasil.reduce((acc, curr) => acc + curr.bunga, 0);
-    const totalPengembalian = formData.plafon + totalBunga;
+    const totalPengembalian = (Number(formData.plafon) || 0) + totalBunga;
 
     doc.setFont("helvetica", "bold");
     doc.text(`Jatuh Tempo Akhir: ${tglJatuhTempo}`, 110, 48);
@@ -124,7 +247,7 @@ export default function Kredit() {
     ]);
 
     autoTable(doc, {
-      startY: 75,
+      startY: 78,
       head: [
         [
           "Bulan",
@@ -152,7 +275,7 @@ export default function Kredit() {
     doc.setFont("helvetica", "italic");
     doc.setTextColor(150);
     doc.text(
-      "Catatan: Perhitungan menggunakan metode Suku Bunga Efektif dengan Angsuran Pokok tetap.",
+      `Catatan: Perhitungan menggunakan metode ${labelMap[formData.jenisKredit]}.`,
       14,
       finalY,
     );
@@ -162,7 +285,7 @@ export default function Kredit() {
       finalY + 5,
     );
 
-    doc.save(`Simulasi_Kredit_${Date.now()}.pdf`);
+    doc.save(`Simulasi_Kredit_${formData.jenisKredit}_${Date.now()}.pdf`);
   };
 
   return (
@@ -172,7 +295,8 @@ export default function Kredit() {
           Kalkulator Kredit
         </h2>
         <p className="text-gray-500 mt-2">
-          Simulasi cicilan bulanan dengan sistem bunga efektif/anuitas.
+          Simulasi cicilan bulanan dengan sistem Menurun, Anuitas, Tetap, maupun
+          LJT.
         </p>
       </div>
 
